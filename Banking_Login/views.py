@@ -4,6 +4,7 @@ from Banking_Login.models import Account_Creation
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth import authenticate, login,logout
+from django.contrib.auth.decorators import login_required
 import random
 # from . import models
 
@@ -47,8 +48,8 @@ def Login(request):
     return render(request,'login.html') 
 
 def page_404(request):
-    return render(request,'404.html')
-
+    return render(request,'404_page.html')
+@login_required(login_url="/login")
 def account_creation(request):
     if request.method == 'POST':
          First_name = request.POST.get("First_Name")
@@ -91,22 +92,56 @@ def account_creation(request):
             Basic_Amount = Basic_Amount,
             Password = Password,
         )
+         return redirect('Debit_Auth')
     # Account_Creation.save()
          
     return render(request,'Create_Account.html')
 
-def Debit_amount(request):
+def Debit_amount_auth(request):
     if request.method == 'POST':
         Account_Number = request.POST.get('Account_Number')
         password = request.POST.get('Password')
         
-        if (Account_Creation.objects.filter(Account_Number=Account_Number).exists()) or (Account_Creation.objects.filter(password=password).exists()):
+        if (Account_Creation.objects.filter(Account_Number=Account_Number,Password = password).exists()):
             messages.info(request,'Crendentials Verified')
-            return redirect('/Account_Creation')
+            return redirect('/Debit_Amount')
         else:
             messages.info(request,'Crendentials Not Verified')
-            return redirect('/Login')
+            return redirect('/login')
     return render(request, 'Debit.html')
-            
-    
-    
+@login_required(login_url="/Debit_Auth")      
+def Debit_amount(request):
+    if request.method == 'POST':
+        Account_Number_Sender = request.POST.get('Account_Number_Sender')
+        Account_Number_Receiver = request.POST.get('Account_Number_Receiver')
+        Amount_to_Transfer = int(request.POST.get('Amount_to_Transfer'))
+        
+        if (Account_Creation.objects.filter(Account_Number=Account_Number_Sender).exists()) or (Account_Creation.objects.filter(Account_Number=Account_Number_Receiver).exists()):
+            Sender_Amount = Account_Creation.objects.get(Account_Number=Account_Number_Sender)
+            Sender_Amount.Basic_Amount = Sender_Amount.Basic_Amount + Amount_to_Transfer
+            Receiver_Amount = Account_Creation.objects.get(Account_Number=Account_Number_Receiver)
+            Receiver_Amount.Basic_Amount = Receiver_Amount.Basic_Amount - Amount_to_Transfer
+            Sender_Amount.save()
+            Receiver_Amount.save()   
+        else:
+            return render(request,'404_page.html')
+
+    return render(request, 'Debit_Amount.html')  
+@login_required(login_url="/Debit_Auth")  
+def Credit_Amount(request):
+    if request.method == 'POST':
+        Account_Number_Sender = request.POST.get('Account_Number_Sender')
+        Account_Number_Receiver = request.POST.get('Account_Number_Receiver')
+        Amount_to_Transfer = int(request.POST.get('Amount_to_Transfer'))
+        
+        if (Account_Creation.objects.filter(Account_Number=Account_Number_Sender).exists()) or (Account_Creation.objects.filter(Account_Number=Account_Number_Receiver).exists()):
+            Sender_Amount = Account_Creation.objects.get(Account_Number=Account_Number_Sender)
+            Sender_Amount.Basic_Amount = Sender_Amount.Basic_Amount + Amount_to_Transfer
+            Receiver_Amount = Account_Creation.objects.get(Account_Number=Account_Number_Receiver)
+            Receiver_Amount.Basic_Amount = Receiver_Amount.Basic_Amount - Amount_to_Transfer
+            Sender_Amount.save()
+            Receiver_Amount.save()   
+        else:
+            return render(request,'404_page.html')
+
+    return render(request, 'Credit_Amount.html')

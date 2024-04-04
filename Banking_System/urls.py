@@ -27,7 +27,9 @@ urlpatterns = [
     path('login',views.Login,name="login"),
     # path('register',views.members,name="register"),
     path('Account_Creation',views.account_creation,name="account_creation"),
-    path('Debit_Auth',views.Debit_amount,name="debit_auth"),
+    path('Debit_Auth',views.Debit_amount_auth,name="debit_auth"),
+    path('Debit_Amount',views.Debit_amount,name="Debit_Amount"),
+    path('Credit_Amount',views.Credit_Amount,name="Credit_Amount")
 ]
 if settings.DEBUG:
     urlpatterns+= static(settings.MEDIA_URL,document_root = settings.MEDIA_ROOT)
