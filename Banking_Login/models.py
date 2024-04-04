@@ -25,3 +25,8 @@ class Account_Creation(models.Model):
     Basic_Amount = models.IntegerField(null=True)
     Password = models.CharField(max_length=100,null=True)
 #https://www.javatpoint.com/django-orm-queries
+
+class Transaction(models.Model):
+    Transaction_Id = models.IntegerField(null=True)
+    Account_Number_Sender = models.IntegerField(null=True)
+    Account_Number_Reciever = models.IntegerField(null=True)

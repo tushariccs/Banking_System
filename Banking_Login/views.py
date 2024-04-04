@@ -1,6 +1,6 @@
 from django.shortcuts import redirect, render
 from django.http import HttpResponse
-from Banking_Login.models import Account_Creation
+from Banking_Login.models import Account_Creation, Transaction
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth import authenticate, login,logout
@@ -92,9 +92,9 @@ def account_creation(request):
             Basic_Amount = Basic_Amount,
             Password = Password,
         )
+         Account_Creation.save()
          return redirect('Debit_Auth')
-    # Account_Creation.save()
-         
+    
     return render(request,'Create_Account.html')
 
 def Debit_amount_auth(request):
@@ -109,6 +109,8 @@ def Debit_amount_auth(request):
             messages.info(request,'Crendentials Not Verified')
             return redirect('/login')
     return render(request, 'Debit.html')
+
+
 @login_required(login_url="/Debit_Auth")      
 def Debit_amount(request):
     if request.method == 'POST':
@@ -123,17 +125,26 @@ def Debit_amount(request):
             Receiver_Amount.Basic_Amount = Receiver_Amount.Basic_Amount - Amount_to_Transfer
             Sender_Amount.save()
             Receiver_Amount.save()   
+            Transaction_Id = int(random.randint(1,1000000000))
+            Transaction.objects.create(
+                Transaction = Transaction_Id,
+                Account_Number_Sender = Account_Number_Sender,
+                Account_Number_Receiver = Account_Number_Receiver,
+            )
+            Transaction.save()
         else:
             return render(request,'404_page.html')
 
     return render(request, 'Debit_Amount.html')  
+
+
 @login_required(login_url="/Debit_Auth")  
 def Credit_Amount(request):
     if request.method == 'POST':
         Account_Number_Sender = request.POST.get('Account_Number_Sender')
         Account_Number_Receiver = request.POST.get('Account_Number_Receiver')
         Amount_to_Transfer = int(request.POST.get('Amount_to_Transfer'))
-        
+        Transaction_Id = int(random.randint(1,1000000000))
         if (Account_Creation.objects.filter(Account_Number=Account_Number_Sender).exists()) or (Account_Creation.objects.filter(Account_Number=Account_Number_Receiver).exists()):
             Sender_Amount = Account_Creation.objects.get(Account_Number=Account_Number_Sender)
             Sender_Amount.Basic_Amount = Sender_Amount.Basic_Amount + Amount_to_Transfer
@@ -141,7 +152,14 @@ def Credit_Amount(request):
             Receiver_Amount.Basic_Amount = Receiver_Amount.Basic_Amount - Amount_to_Transfer
             Sender_Amount.save()
             Receiver_Amount.save()   
+            Transaction.objects.create(
+                Transaction = Transaction_Id,
+                Account_Number_Sender = Account_Number_Sender,
+                Account_Number_Receiver = Account_Number_Receiver,
+            )
+            Transaction.save()
         else:
             return render(request,'404_page.html')
 
     return render(request, 'Credit_Amount.html')
+
